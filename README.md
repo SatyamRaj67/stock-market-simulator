@@ -40,6 +40,8 @@
 - [ ] Implement portfolio summary statistics
 - [ ] Set up watchlist functionality
 
+!NOTE
+- [ ] Implement that Pagination in the stock Table with TanStack Table
 
 ### Transaction System
 

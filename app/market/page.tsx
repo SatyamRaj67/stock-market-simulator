@@ -26,6 +26,7 @@ export default function Page() {
   }, []);
   return (
     <div className="p-4 px-20">
+      <p className="text-5xl">Market Overview</p>
       {isLoading ? <p>Loading stocks...</p> : <StockTable stocks={stocks} />}
     </div>
   );
