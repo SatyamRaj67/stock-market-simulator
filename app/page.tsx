@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import WelcomeSection from "@/components/home/WelcomeSection";
@@ -12,13 +11,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      
       <main className="flex-grow flex flex-col items-center justify-center p-4 md:p-8">
         <WelcomeSection />
-        
+
         <div className="mt-8 text-center">
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             className="bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() => router.push("/login")}
           >

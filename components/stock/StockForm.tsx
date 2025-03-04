@@ -24,24 +24,11 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface StockData {
-  symbol: string;
-  name: string;
-  currentPrice: number;
-  previousClose?: number;
-  openPrice?: number;
-  highPrice?: number;
-  lowPrice?: number;
-  volume?: number;
-  marketCap?: number;
-  description?: string;
-  sector: string;
-}
+import { StockFormData } from "@/types";
 
 interface StockFormProps {
-  initialData?: StockData;
-  onSubmit: (data: StockData & { createdBy: string }) => void;
+  initialData?: StockFormData;
+  onSubmit: (data: StockFormData & { createdBy: string }) => void;
   onCancel: () => void;
 }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
+import { StockFormData } from "@/types";
 
 // Helper function to check if user is admin
 async function isAdmin() {
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Parse request body
-    const data = await req.json();
+    const data = await req.json() as StockFormData;
 
     // Validate required fields
     if (!data.symbol || !data.name || !data.currentPrice) {

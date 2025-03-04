@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import StockTable from '@/components/admin/StockTable';
-import StockForm from '@/components/admin/StockForm';
+import StockTable from '@/components/stock/StockTable';
+import StockForm from '@/components/stock/StockForm';
+import { Stock, StockFormData } from '@/types';
 
 const AdminPage = () => {
   const [stocks, setStocks] = useState([]);
@@ -36,7 +37,7 @@ const AdminPage = () => {
     setIsFormVisible(true);
   };
 
-  const handleEditStock = (stock) => {
+  const handleEditStock = (stock: Stock) => {
     setEditingStock(stock);
     setIsFormVisible(true);
   };
@@ -50,14 +51,15 @@ const AdminPage = () => {
         
         if (!response.ok) throw new Error('Failed to delete stock');
         
-        fetchStocks(); // Refresh the list
+        fetchStocks();
       } catch (err) {
+        console.error(err);
         setError(err.message);
       }
     }
   };
 
-  const handleFormSubmit = async (stockData) => {
+  const handleFormSubmit = async (stockData: StockFormData) => {
     try {
       if (editingStock) {
         // Update existing stock

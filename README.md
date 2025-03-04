@@ -1,36 +1,144 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Development Roadmap: Stock Market Simulator
+## Phase 1: Project Setup & Foundation (Weeks 1-2)
 
-## Getting Started
+### 1. Initialize Next.js Project
 
-First, run the development server:
+- [x] Set up a new Next.js project with TypeScript
+- [x] Configure Tailwind CSS and Shadcn UI
+- [x] Set up folder structure (pages, components, lib, etc.)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Database Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- [x] Set up PostgreSQL database
+- [x] Implement Drizzle ORM schema
+- [x] Create database migration scripts
+- [x] Set up database connection in Next.js
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+### 3. Authentication System
 
-To learn more about Next.js, take a look at the following resources:
+- [x] Implement Next-Auth for user authentication
+- [x] Create login/signup pages
+- [x] Set up role-based access control (user vs admin)
+- [x] Create protected routes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Phase 2: Core Stock Market Features (Weeks 3-4)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Stock Data Models
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [x] Set up API endpoints for stocks
+- [x] Implement stock creation functionality (admin)
+- [x] Create stock listing page with filtering
+
+
+### Portfolio Management
+
+- [ ] Create user portfolio view
+- [ ] Implement portfolio summary statistics
+- [ ] Set up watchlist functionality
+
+
+### Transaction System
+
+- [ ] Implement buy/sell functionality
+- [ ] Create transaction history page
+- [ ] Add validation for purchases (sufficient balance, etc.)
+
+
+
+## Phase 3: Real-time Features (Weeks 5-6)
+
+### Price Simulation Engine
+
+- [ ] Build stock price simulation algorithm
+- [ ] Implement the jump feature with probability settings
+- [ ] Create background process for price updates
+
+
+### Real-time Updates
+
+- [ ] Set up Socket.io for real-time price updates
+- [ ] Implement TanStack Query for data fetching/caching
+- [ ] Create real-time stock price charts with Recharts
+
+
+### Notifications System
+
+- [ ] Implement in-app notifications
+- [ ] Create price alerts functionality
+- [ ] Add transaction notifications
+
+
+
+## Phase 4: Admin Dashboard (Weeks 7-8)
+
+### Admin Interface
+
+- [ ] Build comprehensive admin dashboard
+- [ ] Create stock management tools
+- [ ] Implement user management features
+
+
+### Market Manipulation Tools
+
+- [ ] Implement price freezing functionality
+- [ ] Add price capping features
+- [ ] Create tools for generating market events
+
+
+### Analytics & Reporting
+
+- [ ] Build analytics dashboard for admins
+- [ ] Implement user activity tracking
+- [ ] Create reporting tools for system usage
+
+
+
+## Phase 5: Advanced Features & Refinement (Weeks 9-10)
+
+### Advanced Stock Features
+
+- [ ] Implement stock sectors and categories
+- [ ] Add market trends and indicators
+- [ ] Create stock comparison tools
+
+
+### UI/UX Polish
+
+- [ ] Refine responsive design
+- [ ] Implement animations for price changes
+- [ ] Create dark/light mode
+
+
+### Performance Optimization
+
+- [ ] Optimize database queries
+- [ ] Implement caching strategies
+- [ ] Reduce bundle size
+
+
+
+## Phase 6: Testing & Deployment (Weeks 11-12)
+
+### Testing
+
+- [ ] Write unit tests for core functionality
+- [ ] Implement integration tests
+- [ ] Perform user acceptance testing
+
+
+### Documentation
+
+- [ ] Create user documentation
+- [ ] Write admin guide
+- [ ] Document API endpoints
+
+
+### Deployment
+
+- [ ] Set up CI/CD pipeline
+- [ ] Configure production environment
+- [ ] Deploy application
