@@ -7,7 +7,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { serializeData } from "@/utils/serializeData";
-import { watchlistService } from "@/lib/services/watchlistService";
+import { watchlistService } from "@/prisma/services/watchlistService";
 
 
 

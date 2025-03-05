@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { userService } from "@/lib/services/userService";
+import { userService } from "@/prisma/services/userService";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
