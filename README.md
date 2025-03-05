@@ -36,9 +36,9 @@
 
 ### Portfolio Management
 
-- [ ] Create user portfolio view
-- [ ] Implement portfolio summary statistics
-- [ ] Set up watchlist functionality
+- [x] Create user portfolio view
+- [x] Implement portfolio summary statistics
+- [ ] Set up watchlist functionality (ADMIN)
 
 !NOTE
 - [ ] Implement that Pagination in the stock Table with TanStack Table
