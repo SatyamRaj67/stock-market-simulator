@@ -23,12 +23,8 @@ import PortfolioChart from "@/components/portfolio/PortfolioChart";
 export default async function PortfolioPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session) {
-    return redirect("/login");
-  }
-
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: session?.user?.id },
     include: {
       portfolio: {
         include: {

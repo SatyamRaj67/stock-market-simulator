@@ -19,17 +19,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, ArrowUpDown, Search } from "lucide-react";
+import { Edit, Trash2, ArrowUpDown } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Stock } from "@/types";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface StockTableProps {
   stocks: Stock[];
@@ -213,38 +205,7 @@ const StockTable = ({
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Search className="h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search stocks..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="max-w-sm"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Select
-            value={table.getState().pagination.pageSize.toString()}
-            onValueChange={(value) => {
-              table.setPageSize(Number(value));
-            }}
-          >
-            <SelectTrigger className="h-8 w-[80px]">
-              <SelectValue placeholder={table.getState().pagination.pageSize} />
-            </SelectTrigger>
-            <SelectContent side="top">
-              {[5, 10, 20, 30, 40, 50].map((pageSize) => (
-                <SelectItem key={pageSize} value={pageSize.toString()}>
-                  {pageSize}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
+    <div className="space-y-4 p-4 pt-8">
       <div className="rounded-md border">
         <Table>
           <TableHeader>

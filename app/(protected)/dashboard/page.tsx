@@ -7,10 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session) {
-    return redirect("/login");
-  }
-
   // Get user data including portfolio value
   const user = await prisma.user.findUnique({
     where: { id: session?.user?.id as string },
