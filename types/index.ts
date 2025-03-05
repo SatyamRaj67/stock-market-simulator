@@ -117,12 +117,3 @@ export interface Transaction {
   timestamp: Date;
   stock?: Stock;
 }
-
-// Additional role-related types
-export interface RolePermissions {
-  canCreateStocks: boolean;
-  canEditStocks: boolean;
-  canDeleteStocks: boolean;
-  canManageUsers: boolean;
-  canViewAdminDashboard: boolean;
-}
