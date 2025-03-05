@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 
-import { NextAuthProvider } from "@/providers/session-provider";
-import { ThemeProvider } from "@/providers/theme-provider";
+import { NextAuthProvider } from "@/lib/providers/session-provider";
+import { ThemeProvider } from "@/lib/providers/theme-provider";
 
 import { Navbar } from "@/components/layout/navbar";
-import { QueryClientProvider } from "@/providers/queryClient-provider";
+import { QueryClientProvider } from "@/lib/providers/queryClient-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
