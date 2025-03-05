@@ -51,3 +51,78 @@ export interface Watchlist {
   userId: string;
   items: WatchlistItem[];
 }
+
+// User role enum
+export enum UserRole {
+  USER = "USER",
+  ADMIN = "ADMIN",
+  SUPER_ADMIN = "SUPER_ADMIN",
+}
+
+// User interface
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  avatarUrl?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  balance: number;
+  totalProfit: number;
+  portfolioValue: number;
+  isActive: boolean;
+  lastLogin?: Date;
+
+  // References to related entities
+  portfolio?: Portfolio;
+  watchlist?: Watchlist;
+}
+
+// Portfolio interface
+export interface Portfolio {
+  id: string;
+  userId: string;
+  positions: Position[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// Position interface
+export interface Position {
+  id: string;
+  portfolioId: string;
+  stockId: string;
+  quantity: number;
+  averageBuyPrice: number;
+  currentValue: number;
+  profitLoss: number;
+  stock?: Stock;
+}
+
+// Transaction types
+export enum TransactionType {
+  BUY = "BUY",
+  SELL = "SELL",
+}
+
+export interface Transaction {
+  id: string;
+  userId: string;
+  stockId: string;
+  type: TransactionType;
+  quantity: number;
+  price: number;
+  totalAmount: number;
+  timestamp: Date;
+  stock?: Stock;
+}
+
+// Additional role-related types
+export interface RolePermissions {
+  canCreateStocks: boolean;
+  canEditStocks: boolean;
+  canDeleteStocks: boolean;
+  canManageUsers: boolean;
+  canViewAdminDashboard: boolean;
+}
