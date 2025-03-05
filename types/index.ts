@@ -37,3 +37,17 @@ export interface StockResponse {
   data?: Stock | Stock[];
   error?: string;
 }
+
+export interface WatchlistItem {
+  id: string;
+  watchlistId: string;
+  stockId: string;
+  stock: Stock;
+  addedAt: string;
+}
+
+export interface Watchlist {
+  id: string;
+  userId: string;
+  items: WatchlistItem[];
+}

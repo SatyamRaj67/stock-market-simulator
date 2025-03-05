@@ -5,12 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PlusIcon, SearchIcon, Loader2 } from "lucide-react";
-
-interface Stock {
-  id: string;
-  symbol: string;
-  name: string;
-}
+import { Stock } from "@/types";
 
 export function StockSearch({
   watchlistId,
