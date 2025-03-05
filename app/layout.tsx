@@ -7,6 +7,7 @@ import { NextAuthProvider } from "@/providers/session-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 
 import { Navbar } from "@/components/layout/navbar";
+import { QueryClientProvider } from "@/providers/queryClient-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,8 +36,10 @@ export default function RootLayout({
       >
         <NextAuthProvider>
           <ThemeProvider>
-            <Navbar />
-            {children}
+            <QueryClientProvider>
+              <Navbar />
+              {children}
+            </QueryClientProvider>
           </ThemeProvider>
         </NextAuthProvider>
       </body>
