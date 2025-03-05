@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
-
-// Helper function to check if user is admin
-async function isAdmin() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return false;
-
-  const role = session.user.role;
-  return role === "ADMIN" || role === "SUPER_ADMIN";
-}
+import { checkAdminRole } from "@/utils/roleCheck";
 
 // GET single stock by ID
 export async function GET(
@@ -41,15 +33,15 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
-  try {
-    // Check admin authorization
-    if (!(await isAdmin())) {
-      return NextResponse.json(
-        { error: "Unauthorized: Admin access required" },
-        { status: 403 },
-      );
-    }
+  // Check admin authorization
+  const session = await getServerSession(authOptions);
+  const { isAuthorized, response } = checkAdminRole(session);
+  
+  if (!isAuthorized) {
+    return response;
+  }
 
+  try {
     const data = await req.json();
 
     // Check if stock exists
@@ -96,15 +88,15 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
-  try {
-    // Check admin authorization
-    if (!(await isAdmin())) {
-      return NextResponse.json(
-        { error: "Unauthorized: Admin access required" },
-        { status: 403 },
-      );
-    }
+  // Check admin authorization
+  const session = await getServerSession(authOptions);
+  const { isAuthorized, response } = checkAdminRole(session);
+  
+  if (!isAuthorized) {
+    return response;
+  }
 
+  try {
     // Check if stock exists
     const exists = await prisma.stock.findUnique({
       where: { id: params.id },

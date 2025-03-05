@@ -7,6 +7,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { serializeData } from "@/utils/serializeData";
+import { watchlistService } from "@/lib/services/watchlistService";
 
 
 
@@ -18,18 +19,7 @@ export default async function WatchlistPage() {
   }
 
   // Get or create the user's watchlist
-  let watchlistData = await prisma.watchlist.findUnique({
-    where: {
-      userId: session.user.id,
-    },
-    include: {
-      items: {
-        include: {
-          stock: true,
-        },
-      },
-    },
-  });
+  let watchlistData = await watchlistService.findOrCreateByUserId(session.user.id);
 
   // If no watchlist exists, create one
   if (!watchlistData) {

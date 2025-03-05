@@ -2,35 +2,17 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-
-// Helper function to serialize data
-function serializeData(data) {
-  if (data === null || data === undefined) return data;
-
-  if (typeof data === "object") {
-    if (data instanceof Date) return data.toISOString();
-
-    // Handle Decimal objects
-    if ("s" in data && "d" in data) return String(data);
-
-    if (Array.isArray(data)) return data.map(serializeData);
-
-    const result = {};
-    for (const key in data) {
-      result[key] = serializeData(data[key]);
-    }
-    return result;
-  }
-
-  return data;
-}
+import { serializeData } from "@/utils/serializeData";
+import { checkAdminRole } from "@/utils/roleCheck";
 
 // GET all watchlists
 export async function GET() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user || session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  const { isAuthorized, response } = checkAdminRole(session);
+
+  if (!isAuthorized) {
+    return response;
   }
 
   try {
@@ -63,8 +45,10 @@ export async function GET() {
 export async function POST() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  const { isAuthorized, response } = checkAdminRole(session);
+
+  if (!isAuthorized) {
+    return response;
   }
 
   try {

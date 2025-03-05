@@ -1,27 +1,18 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { userService } from "@/lib/services/userService";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
+  if (!session?.user?.id) {
+    return redirect("/login");
+  }
+
   // Get user data including portfolio value
-  const user = await prisma.user.findUnique({
-    where: { id: session?.user?.id as string },
-    include: {
-      portfolio: {
-        include: {
-          positions: {
-            include: {
-              stock: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  const user = await userService.findWithPortfolio(session?.user?.id);
 
   if (!user) {
     return redirect("/login");

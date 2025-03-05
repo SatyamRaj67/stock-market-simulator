@@ -2,46 +2,50 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { checkAdminRole } from "@/utils/roleCheck";
 
-export async function DELETE(
+export async function GET(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: { userId: string } },
 ) {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { isAuthorized, response } = checkAdminRole(session);
+
+  if (!isAuthorized) {
+    return response;
   }
 
   try {
-    // Find the watchlist item
-    const watchlistItem = await prisma.watchlistItem.findUnique({
-      where: { id: params.id },
-      include: { watchlist: true },
+    // Find watchlist with all items
+    const watchlist = await prisma.watchlist.findUnique({
+      where: {
+        userId: params.userId,
+      },
+      include: {
+        items: {
+          include: {
+            stock: true,
+          },
+          orderBy: {
+            addedAt: "desc",
+          },
+        },
+      },
     });
 
-    if (!watchlistItem) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    if (!watchlist) {
+      return NextResponse.json(
+        { error: "Watchlist not found" },
+        { status: 404 },
+      );
     }
 
-    // Check if the user owns the watchlist or is an admin
-    if (
-      watchlistItem.watchlist.userId !== session.user.id &&
-      session.user.role !== "ADMIN"
-    ) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
-    // Delete the watchlist item
-    await prisma.watchlistItem.delete({
-      where: { id: params.id },
-    });
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json(watchlist);
   } catch (error) {
-    console.error("Error removing stock from watchlist:", error);
+    console.error("Error fetching watchlist:", error);
     return NextResponse.json(
-      { error: "Failed to remove stock from watchlist" },
+      { error: "Failed to fetch watchlist" },
       { status: 500 },
     );
   }

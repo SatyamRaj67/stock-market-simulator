@@ -3,15 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 import { StockFormData } from "@/types";
-
-// Helper function to check if user is admin
-async function isAdmin() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return false;
-
-  const role = session.user.role;
-  return role === "ADMIN" || role === "SUPER_ADMIN";
-}
+import { checkAdminRole } from "@/utils/roleCheck";
 
 // GET all stocks (public read access)
 export async function GET() {
@@ -32,15 +24,15 @@ export async function GET() {
 
 // POST create new stock (admin only)
 export async function POST(req: NextRequest) {
-  try {
-    // Check admin authorization
-    if (!(await isAdmin())) {
-      return NextResponse.json(
-        { error: "Unauthorized: Admin access required" },
-        { status: 403 },
-      );
-    }
+  // Check admin authorization
+  const session = await getServerSession(authOptions);
+  const { isAuthorized, response } = checkAdminRole(session);
+  
+  if (!isAuthorized) {
+    return response;
+  }
 
+  try {
     // Parse request body
     const data = await req.json() as StockFormData;
 
@@ -51,8 +43,6 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
-
-    const session = await getServerSession(authOptions);
 
     // Create the stock
     const stock = await prisma.stock.create({
@@ -68,7 +58,7 @@ export async function POST(req: NextRequest) {
         marketCap: data.marketCap,
         description: data.description || "",
         sector: data.sector || "Uncategorized",
-        createdBy: { connect: { id: session?.user.id },}
+        createdBy: { connect: { id: session?.user.id } },
       },
     });
 
