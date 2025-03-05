@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Stock, StockFormData } from "@/types";
+import { Stock, StockFormData } from "@/lib/types";
 
 export const useStockManagement = () => {
   const [stocks, setStocks] = useState<Stock[]>([]);

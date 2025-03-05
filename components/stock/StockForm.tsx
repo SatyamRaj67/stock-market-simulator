@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StockFormData } from "@/types";
+import { StockFormData } from "@/lib/types";
 
 interface StockFormProps {
   initialData?: StockFormData;

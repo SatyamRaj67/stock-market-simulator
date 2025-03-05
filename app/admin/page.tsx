@@ -4,7 +4,7 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminActions } from "@/components/admin/AdminActions";
 import { AdminFormWrapper } from "@/components/admin/AdminFormWrapper";
 import { AdminListSection } from "@/components/admin/AdminListSection";
-import { useStockManagement } from "@/hooks/useStockManagement";
+import { useStockManagement } from "@/lib/hooks/useStockManagement";
 
 const AdminPage = () => {
   const {

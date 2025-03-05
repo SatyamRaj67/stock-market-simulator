@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
-import { checkAdminRole } from "@/utils/roleCheck";
+import { checkAdminRole } from "@/lib/utils/roleCheck";
 
 // GET single stock by ID
 export async function GET(

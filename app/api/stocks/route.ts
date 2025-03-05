@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
-import { StockFormData } from "@/types";
-import { checkAdminRole } from "@/utils/roleCheck";
+import { StockFormData } from "@/lib/types";
+import { checkAdminRole } from "@/lib/utils/roleCheck";
 
 // GET all stocks (public read access)
 export async function GET() {

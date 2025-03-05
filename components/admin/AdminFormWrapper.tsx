@@ -1,6 +1,6 @@
 import React from "react";
 import StockForm from "@/components/stock/StockForm";
-import { Stock, StockFormData } from "@/types";
+import { Stock, StockFormData } from "@/lib/types";
 
 type AdminFormWrapperProps = {
   isVisible: boolean;

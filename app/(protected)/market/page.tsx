@@ -1,7 +1,7 @@
 "use client";
 
 import StockTable from "@/components/stock/StockTable";
-import { useStockManagement } from "@/hooks/useStockManagement";
+import { useStockManagement } from "@/lib/hooks/useStockManagement";
 
 export default function Page() {
   const { stocks, isLoading } = useStockManagement();

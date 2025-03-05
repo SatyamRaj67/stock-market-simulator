@@ -1,6 +1,6 @@
 import React from "react";
 import StockTable from "@/components/stock/StockTable";
-import { Stock } from "@/types";
+import { Stock } from "@/lib/types";
 
 type AdminListSectionProps = {
   isLoading: boolean;

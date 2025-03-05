@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { StockSearch } from "../stock/StockSearch";
-import { Watchlist } from "@/types";
+import { Watchlist } from "@/lib/types";
 
 // Function to remove a stock from watchlist
 async function removeFromWatchlist(watchlistItemId: string) {

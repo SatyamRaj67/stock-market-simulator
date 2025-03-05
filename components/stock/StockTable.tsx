@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, ArrowUpDown } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { Stock } from "@/types";
+import { Stock } from "@/lib/types";
 
 interface StockTableProps {
   stocks: Stock[];
