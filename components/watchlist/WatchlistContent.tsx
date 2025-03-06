@@ -1,34 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-// import { StockSearch } from "./stock-search";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import {
-  ArrowUpIcon,
-  ArrowDownIcon,
-  EyeOffIcon,
-  RefreshCwIcon,
-} from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Card, CardContent } from "@/components/ui/card";
 import { StockSearch } from "../stock/StockSearch";
 import { Watchlist } from "@/lib/types";
+import { WatchlistHeader } from "./WatchlistHeader";
+import { WatchlistTable } from "./WatchlistTable";
+import { useSortable } from "@/lib/hooks/useSortable";
+import { toast } from "sonner"; // Add toast for user feedback
 
 // Function to remove a stock from watchlist
 async function removeFromWatchlist(watchlistItemId: string) {
@@ -37,10 +16,25 @@ async function removeFromWatchlist(watchlistItemId: string) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to remove stock from watchlist");
+    // Try to parse error as JSON, but handle non-JSON responses
+    try {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to remove stock from watchlist");
+    } catch (error) {
+      throw new Error(
+        `Failed to remove stock from watchlist: ${(error as Error).message}`,
+      );
+    }
   }
 
-  return response.json();
+  // Check if response has content before trying to parse as JSON
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    return response.json();
+  }
+
+  // Return a default success object for empty responses
+  return { success: true };
 }
 
 export function WatchlistContent({
@@ -51,8 +45,6 @@ export function WatchlistContent({
   userId: string;
 }) {
   const queryClient = useQueryClient();
-  const [sortBy, setSortBy] = useState("symbol");
-  const [sortDirection, setSortDirection] = useState("asc");
 
   // Fetch watchlist data with TanStack Query
   const {
@@ -76,156 +68,83 @@ export function WatchlistContent({
   const removeStockMutation = useMutation({
     mutationFn: removeFromWatchlist,
     onSuccess: () => {
+      // Immediately invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ["watchlist", userId] });
+      toast.success("Stock removed from watchlist");
+    },
+    onError: (error) => {
+      console.error("Failed to remove stock:", error);
+      toast.error("Failed to remove stock from watchlist");
     },
   });
 
-  // Sort watchlist items
-  const sortedItems = [...watchlist.items].sort((a, b) => {
-    let compareResult = 0;
+  // Handle removing stock with optimistic updates
+  const handleRemoveStock = (id: string) => {
+    // Store current watchlist for rollback
+    const previousWatchlist = queryClient.getQueryData(["watchlist", userId]);
 
-    if (sortBy === "symbol") {
-      compareResult = a.stock.symbol.localeCompare(b.stock.symbol);
-    } else if (sortBy === "name") {
-      compareResult = a.stock.name.localeCompare(b.stock.name);
-    } else if (sortBy === "price") {
-      compareResult =
-        parseFloat(a.stock.currentPrice) - parseFloat(b.stock.currentPrice);
-    } else if (sortBy === "change") {
-      const changeA = a.stock.previousClose
-        ? parseFloat(a.stock.currentPrice) - parseFloat(a.stock.previousClose)
-        : 0;
-      const changeB = b.stock.previousClose
-        ? parseFloat(b.stock.currentPrice) - parseFloat(b.stock.previousClose)
-        : 0;
-      compareResult = changeA - changeB;
-    }
+    // Optimistically update UI
+    queryClient.setQueryData(
+      ["watchlist", userId],
+      (old: Watchlist | undefined) => ({
+        ...old!,
+        items: old?.items.filter((item) => item.id !== id) ?? [],
+      }),
+    );
 
-    return sortDirection === "asc" ? compareResult : -compareResult;
-  });
-
-  const handleSort = (column: "symbol" | "name" | "price" | "change") => {
-    if (sortBy === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(column);
-      setSortDirection("asc");
-    }
+    // Execute actual removal
+    removeStockMutation.mutate(id, {
+      onError: () => {
+        // Rollback on failure
+        queryClient.setQueryData(["watchlist", userId], previousWatchlist);
+      },
+    });
   };
+
+  // Sort watchlist items using the custom hook
+  const { sortedItems, sortBy, sortDirection, handleSort } = useSortable<{
+    id: string;
+    stock: {
+      symbol: string;
+      name: string;
+      currentPrice: string;
+      previousClose?: string;
+    };
+    addedAt: string;
+  }>(watchlist.items || [], {
+    defaultSortField: "symbol",
+    sortFunctions: {
+      symbol: (a, b) => a.stock.symbol.localeCompare(b.stock.symbol),
+      name: (a, b) => a.stock.name.localeCompare(b.stock.name),
+      price: (a, b) =>
+        parseFloat(a.stock.currentPrice) - parseFloat(b.stock.currentPrice),
+      change: (a, b) => {
+        const changeA = a.stock.previousClose
+          ? parseFloat(a.stock.currentPrice) - parseFloat(a.stock.previousClose)
+          : 0;
+        const changeB = b.stock.previousClose
+          ? parseFloat(b.stock.currentPrice) - parseFloat(b.stock.previousClose)
+          : 0;
+        return changeA - changeB;
+      },
+    },
+  });
 
   return (
     <div className="space-y-6">
       <StockSearch watchlistId={watchlist.id} onAddStock={() => refetch()} />
 
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-center">
-            <CardTitle>Watched Stocks</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={isLoading}
-            >
-              <RefreshCwIcon className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
-          <CardDescription>
-            Track prices of your favorite stocks
-          </CardDescription>
-        </CardHeader>
+        <WatchlistHeader onRefresh={refetch} isLoading={isLoading} />
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead
-                  className="cursor-pointer"
-                  onClick={() => handleSort("symbol")}
-                >
-                  Symbol{" "}
-                  {sortBy === "symbol" && (sortDirection === "asc" ? "↑" : "↓")}
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer"
-                  onClick={() => handleSort("name")}
-                >
-                  Name{" "}
-                  {sortBy === "name" && (sortDirection === "asc" ? "↑" : "↓")}
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer text-right"
-                  onClick={() => handleSort("price")}
-                >
-                  Price{" "}
-                  {sortBy === "price" && (sortDirection === "asc" ? "↑" : "↓")}
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer text-right"
-                  onClick={() => handleSort("change")}
-                >
-                  Change{" "}
-                  {sortBy === "change" && (sortDirection === "asc" ? "↑" : "↓")}
-                </TableHead>
-                <TableHead className="text-right">Added</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedItems.map((item) => {
-                const priceChange = item.stock.previousClose
-                  ? parseFloat(item.stock.currentPrice) -
-                    parseFloat(item.stock.previousClose)
-                  : 0;
-                const percentChange = item.stock.previousClose
-                  ? (priceChange / parseFloat(item.stock.previousClose)) * 100
-                  : 0;
-                const isPositive = priceChange >= 0;
-
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">
-                      {item.stock.symbol}
-                    </TableCell>
-                    <TableCell>{item.stock.name}</TableCell>
-                    <TableCell className="text-right font-mono">
-                      ${parseFloat(item.stock.currentPrice).toFixed(2)}
-                    </TableCell>
-                    <TableCell
-                      className={`text-right font-mono ${
-                        isPositive ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      <div className="flex items-center justify-end">
-                        {isPositive ? (
-                          <ArrowUpIcon className="h-4 w-4 mr-1" />
-                        ) : (
-                          <ArrowDownIcon className="h-4 w-4 mr-1" />
-                        )}
-                        {priceChange.toFixed(2)} ({percentChange.toFixed(2)}%)
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground text-sm">
-                      {formatDistanceToNow(new Date(item.addedAt), {
-                        addSuffix: true,
-                      })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeStockMutation.mutate(item.id)}
-                        disabled={removeStockMutation.isPending}
-                      >
-                        <EyeOffIcon className="h-4 w-4" />
-                        <span className="sr-only">Remove from watchlist</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <WatchlistTable
+            items={sortedItems}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            onRemoveItem={handleRemoveStock}
+            isRemoving={removeStockMutation.isPending}
+          />
         </CardContent>
       </Card>
     </div>

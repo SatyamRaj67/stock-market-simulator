@@ -38,7 +38,7 @@
 
 !NOTE
 
-- [ ] Implement that Pagination in the stock Table with TanStack Table
+- [x] Implement that Pagination in the stock Table with TanStack Table
 
 ### Transaction System
 

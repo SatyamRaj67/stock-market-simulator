@@ -11,7 +11,7 @@ import {
 import { EyeIcon } from "lucide-react";
 
 export function EmptyWatchlist({ watchlistId }: { watchlistId: string }) {
-  return (
+  return ( 
     <div className="space-y-6">
       <StockSearch
         watchlistId={watchlistId}

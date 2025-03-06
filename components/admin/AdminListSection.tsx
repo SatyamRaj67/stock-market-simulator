@@ -1,6 +1,6 @@
 import React from "react";
-import StockTable from "@/components/stock/StockTable";
 import { Stock } from "@/lib/types";
+import { StockTable } from "../stock/StockTable";
 
 type AdminListSectionProps = {
   isLoading: boolean;
@@ -19,5 +19,5 @@ export const AdminListSection: React.FC<AdminListSectionProps> = ({
     return <p>Loading stocks...</p>;
   }
 
-  return <StockTable stocks={stocks} onEdit={onEdit} onDelete={onDelete} />;
+  return <StockTable initialStocks={stocks} onEdit={onEdit} onDelete={onDelete} />;
 };

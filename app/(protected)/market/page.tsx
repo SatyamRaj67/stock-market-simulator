@@ -1,6 +1,6 @@
 "use client";
 
-import StockTable from "@/components/stock/StockTable";
+import StockTable from "@/components/stock/StockTable/StockTableContent";
 import { useStockManagement } from "@/lib/hooks/useStockManagement";
 
 export default function Page() {

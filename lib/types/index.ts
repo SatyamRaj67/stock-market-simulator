@@ -100,20 +100,27 @@ export interface Position {
   stock?: Stock;
 }
 
+export interface Transaction {
+  id: string;
+  userId: string;
+  stockId: string;
+  type: TransactionType;
+  status: TransactionStatus;
+  quantity: number;
+  price: number;
+  totalAmount: number;
+  timestamp: Date;
+  stock?: Stock;
+}
+
 // Transaction types
 export enum TransactionType {
   BUY = "BUY",
   SELL = "SELL",
 }
 
-export interface Transaction {
-  id: string;
-  userId: string;
-  stockId: string;
-  type: TransactionType;
-  quantity: number;
-  price: number;
-  totalAmount: number;
-  timestamp: Date;
-  stock?: Stock;
+export enum TransactionStatus {
+  PENDING = "PENDING",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
 }
