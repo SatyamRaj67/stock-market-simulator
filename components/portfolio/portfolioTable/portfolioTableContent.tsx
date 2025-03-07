@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import {
   createColumnHelper,
@@ -21,26 +19,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, SortAsc, SortDesc } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import {
-  Transaction,
-  TransactionsResponse,
-  TransactionType,
-} from "@/lib/types";
-import PortfolioTablePagination from "./portfolioTable/portfolioTablePagination";
-import { useSession } from "next-auth/react";
+import { Transaction, TransactionType } from "@/lib/types";
+import PortfolioTablePagination from "./portfolioTablePagination";
 import { useQuery } from "@tanstack/react-query";
 
-interface PortfolioTransactionsProps {
-  userId?: string;
+interface TransactionsTableProps {
+  transactions: Transaction[];
+  isLoading?: boolean;
 }
 
 const columnHelper = createColumnHelper<Transaction>();
 
-export default function PortfolioTransactions({
-  userId,
-}: PortfolioTransactionsProps) {
-  const { data: session } = useSession();
-  const effectiveUserId = userId || session?.user?.id;
+export default function PortfolioTableContent({
+  transactions,
+  isLoading = false,
+}: TransactionsTableProps) {
+  const userId = transactions[0]?.userId;
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: "timestamp", desc: true },
@@ -51,49 +45,25 @@ export default function PortfolioTransactions({
     pageSize: 10,
   });
 
-  // Use a stable fetch function that doesn't depend on state
-  const fetchTransactions = async ({
-    pageIndex,
-    pageSize,
-  }: {
-    pageIndex: number;
-    pageSize: number;
-  }): Promise<TransactionsResponse> => {
-    if (!effectiveUserId)
-      return {
-        transactions: [],
-        total: 0,
-        page: 0,
-        limit: pageSize,
-        totalPages: 0,
-      };
-
-    const res = await fetch(
-      `/api/transactions?page=${pageIndex}&limit=${pageSize}`,
-    );
-    if (!res.ok) {
-      throw new Error("Failed to fetch transactions");
-    }
-    return res.json();
-  };
-
-  // Update your useQuery hook to use the correct type
-  const { data, isLoading, error } = useQuery<TransactionsResponse, Error>({
+  // Refetch the data when pagination changes
+  useQuery({
     queryKey: [
       "transactions",
-      effectiveUserId,
+      userId,
       pagination.pageIndex,
       pagination.pageSize,
     ],
-    queryFn: () => fetchTransactions(pagination),
-    staleTime: 15000,
-    enabled: !!effectiveUserId,
-    placeholderData: (previousData) => previousData,
-  });
+    queryFn: async () => {
+      if (!userId) return null;
 
-  const transactions = data?.transactions || [];
-  const totalPages = data?.totalPages || 0;
-  const totalItems = data?.total || 0;
+      const res = await fetch(
+        `/api/transactions?page=${pagination.pageIndex}&limit=${pagination.pageSize}`,
+      );
+      if (!res.ok) throw new Error("Failed to fetch transactions");
+      return res.json();
+    },
+    enabled: !!userId && !isLoading,
+  });
 
   const columns = [
     columnHelper.accessor("type", {
@@ -120,9 +90,7 @@ export default function PortfolioTransactions({
       cell: ({ row }) => (
         <div
           className={
-            row.original.type === TransactionType.BUY
-              ? "text-green-600"
-              : "text-red-600"
+            row.original.type === TransactionType.BUY ? "text-green-600" : "text-red-600"
           }
         >
           {row.original.type}
@@ -239,15 +207,19 @@ export default function PortfolioTransactions({
       ),
     }),
   ];
+
   const table = useReactTable({
     data: transactions,
     columns,
-    manualPagination: true,
-    pageCount: totalPages,
     state: {
       sorting,
       pagination,
     },
+    manualPagination: true,
+    pageCount:
+      transactions.length > 0
+        ? Math.ceil(transactions.length / pagination.pageSize)
+        : 0,
     enableSorting: true,
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
@@ -257,83 +229,65 @@ export default function PortfolioTransactions({
 
   return (
     <div className="w-full">
-      {isLoading && transactions.length === 0 ? (
-        <div className="flex justify-center py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-        </div>
-      ) : error ? (
-        <div className="p-4 text-center text-red-500">
-          Error loading transactions: {(error as Error).message}
-        </div>
-      ) : (
-        <>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </TableHead>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              Array(5)
+                .fill(0)
+                .map((_, index) => (
+                  <TableRow key={index}>
+                    {columns.map((_, colIndex) => (
+                      <TableCell key={colIndex}>
+                        <div className="h-5 w-full animate-pulse rounded bg-muted"></div>
+                      </TableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  // Show loading skeleton while fetching
-                  Array.from({ length: pagination.pageSize }).map((_, i) => (
-                    <TableRow key={`loading-${i}`}>
-                      {Array.from({ length: table.getAllColumns().length }).map(
-                        (_, j) => (
-                          <TableCell key={`loading-cell-${j}`}>
-                            <div className="h-5 w-full animate-pulse rounded-md bg-muted"></div>
-                          </TableCell>
-                        ),
+                ))
+            ) : table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
                       )}
-                    </TableRow>
-                  ))
-                ) : transactions.length > 0 ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id}>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={table.getAllColumns().length}
-                      className="h-24 text-center"
-                    >
-                      No transactions found.
                     </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No transactions found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-          {transactions.length > 0 && (
-            <PortfolioTablePagination
-              table={table}
-              totalItems={totalItems} // Pass the total count
-            />
-          )}
-        </>
-      )}
+      <PortfolioTablePagination table={table} />
     </div>
   );
 }

@@ -13,29 +13,34 @@ const AdminPage = () => {
     error,
     editingStock,
     isFormVisible,
-    // fetchStocks,
+    deleteModalData,
     handleAddStock,
     handleEditStock,
     handleDeleteStock,
+    handleForceDelete,
     handleFormSubmit,
-    setIsFormVisible
+    setIsFormVisible,
+    setDeleteModalData,
   } = useStockManagement();
 
   return (
     <div className="container mx-auto p-4">
       <AdminHeader title="Stock Management Dashboard" error={error} />
       <AdminActions onAddStock={handleAddStock} />
-      <AdminFormWrapper 
+      <AdminFormWrapper
         isVisible={isFormVisible}
         editingStock={editingStock}
         onSubmit={handleFormSubmit}
         onCancel={() => setIsFormVisible(false)}
       />
-      <AdminListSection 
+      <AdminListSection
         isLoading={isLoading}
         stocks={stocks}
         onEdit={handleEditStock}
         onDelete={handleDeleteStock}
+        deleteModalData={deleteModalData}
+        setDeleteModalData={setDeleteModalData}
+        onForceDelete={handleForceDelete}
       />
     </div>
   );

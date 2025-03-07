@@ -75,7 +75,12 @@ export interface User {
   lastLogin?: Date;
 
   // References to related entities
-  portfolio?: Portfolio;
+  portfolio?: {
+    [stockId: string]: {
+      quantity: number;
+      averageBuyPrice: number;
+    };
+  };
   watchlist?: Watchlist;
 }
 
@@ -110,17 +115,26 @@ export interface Transaction {
   price: number;
   totalAmount: number;
   timestamp: Date;
+  createdAt: string;
   stock?: Stock;
 }
 
 // Transaction types
 export enum TransactionType {
-  BUY = "BUY",
-  SELL = "SELL",
+  BUY="BUY",
+  SELL="SELL",
 }
 
 export enum TransactionStatus {
-  PENDING = "PENDING",
-  COMPLETED = "COMPLETED",
-  FAILED = "FAILED",
+  PENDING,
+  COMPLETED,
+  FAILED,
+}
+
+export interface TransactionsResponse {
+  transactions: Transaction[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }

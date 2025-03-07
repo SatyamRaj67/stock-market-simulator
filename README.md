@@ -42,9 +42,9 @@
 
 ### Transaction System
 
-- [ ] Implement buy/sell functionality
-- [ ] Create transaction history page
-- [ ] Add validation for purchases (sufficient balance, etc.)
+- [x] Implement buy/sell functionality
+- [x] Create transaction history page
+- [x] Add validation for purchases (sufficient balance, etc.)
 
 ## Phase 3: Real-time Features (Weeks 5-6)
 

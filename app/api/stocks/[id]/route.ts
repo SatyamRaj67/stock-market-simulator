@@ -4,6 +4,17 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 import { checkAdminRole } from "@/lib/utils/roleCheck";
 
+interface UserTransactionGroup {
+  [userId: string]: {
+    user: {
+      id: string;
+      name: string | null;
+      email: string | null;
+    };
+    count: number;
+  };
+}
+
 // GET single stock by ID
 export async function GET(
   req: NextRequest,
@@ -36,7 +47,7 @@ export async function PUT(
   // Check admin authorization
   const session = await getServerSession(authOptions);
   const { isAuthorized, response } = checkAdminRole(session);
-  
+
   if (!isAuthorized) {
     return response;
   }
@@ -91,25 +102,83 @@ export async function DELETE(
   // Check admin authorization
   const session = await getServerSession(authOptions);
   const { isAuthorized, response } = checkAdminRole(session);
-  
+
   if (!isAuthorized) {
     return response;
   }
 
   try {
+    const { id } = params;
+    const { forceDelete } = await req.json().catch(() => ({}));
+
     // Check if stock exists
     const exists = await prisma.stock.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!exists) {
       return NextResponse.json({ error: "Stock not found" }, { status: 404 });
     }
 
-    // Delete stock
-    await prisma.stock.delete({
-      where: { id: params.id },
+    // Check for related transactions
+    const relatedTransactions = await prisma.transaction.count({
+      where: { stockId: id },
     });
+
+    if (relatedTransactions > 0 && !forceDelete) {
+      // Get user transaction details
+      const transactions = await prisma.transaction.findMany({
+        where: { stockId: id },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+        take: 10, // Limit results
+      });
+
+      // Group transactions by user
+      const userTransactions = transactions.reduce<UserTransactionGroup>(
+        (acc, transaction) => {
+          if (!acc[transaction.user.id]) {
+            acc[transaction.user.id] = {
+              user: transaction.user,
+              count: 0,
+            };
+          }
+          acc[transaction.user.id].count++;
+          return acc;
+        },
+        {},
+      );
+
+      return NextResponse.json(
+        {
+          error: "Cannot delete stock that has related transactions.",
+          hasRelatedTransactions: true,
+          transactionCount: relatedTransactions,
+          affectedUsers: Object.values(userTransactions),
+        },
+        { status: 400 },
+      );
+    }
+
+    if (forceDelete && relatedTransactions > 0) {
+      // First delete all related transactions in a transaction
+      await prisma.$transaction([
+        prisma.transaction.deleteMany({ where: { stockId: id } }),
+        prisma.stock.delete({ where: { id } }),
+      ]);
+    } else {
+      // Normal delete (no transactions)
+      await prisma.stock.delete({
+        where: { id },
+      });
+    }
 
     return NextResponse.json(
       { message: "Stock deleted successfully" },
@@ -117,8 +186,9 @@ export async function DELETE(
     );
   } catch (error) {
     console.error("Error deleting stock:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "Failed to delete stock" },
+      { error: "Failed to delete stock", details: errorMessage },
       { status: 500 },
     );
   }

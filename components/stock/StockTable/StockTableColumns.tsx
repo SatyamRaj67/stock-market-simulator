@@ -2,7 +2,8 @@ import { ColumnDef, Column } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import { Stock } from "@/lib/types";
-import { StockActions } from "./StockActions";
+import { TradingActions } from "./Actions/TradingActions";
+import { StockActions } from "./Actions/StockActions";
 
 export const createSortHeader = (title: string) => {
   const SortHeader = ({ column }: { column: Column<Stock> }) => (
@@ -23,6 +24,7 @@ export const createSortHeader = (title: string) => {
 
 export const getStockColumns = (
   showActions: boolean,
+  showTrading: boolean,
   onEdit?: (stock: Stock) => void,
   onDelete?: (stockId: string) => void,
 ): ColumnDef<Stock>[] => {
@@ -69,9 +71,22 @@ export const getStockColumns = (
     },
   ];
 
+  // Add trading column if showTrading is true
+  if (showTrading) {
+    columns.push({
+      id: "trading",
+      header: () => <div className="text-center font-semibold">Actions</div>,
+      cell: ({ row }) => (
+        <TradingActions stock={row.original} />
+      ),
+    });
+  }
+
+  // Add actions column if showActions is true
   if (showActions) {
     columns.push({
       id: "actions",
+      header: () => <div className="text-center font-semibold">Actions</div>,
       cell: ({ row }) => (
         <StockActions
           stock={row.original}

@@ -21,6 +21,7 @@ interface StockTableProps {
   onEdit?: (stock: Stock) => void;
   onDelete?: (stockId: string) => void;
   showActions?: boolean;
+  showTrading?: boolean;
   isLoading?: boolean;
 }
 
@@ -29,6 +30,7 @@ const StockTableContent = ({
   onEdit,
   onDelete,
   showActions: explicitShowActions,
+  showTrading = false,
   isLoading = false,
 }: StockTableProps) => {
   const pathname = usePathname();
@@ -40,7 +42,8 @@ const StockTableContent = ({
       ? explicitShowActions
       : pathname?.startsWith("/admin");
 
-  const columns = getStockColumns(showActions, onEdit, onDelete);
+  // Pass showTrading to getStockColumns
+  const columns = getStockColumns(showActions, showTrading, onEdit, onDelete);
 
   const table = useReactTable({
     data: stocks,

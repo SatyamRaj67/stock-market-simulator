@@ -1,144 +1,195 @@
-"use client";
-
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Stock } from "@/lib/types";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { Stock, StockFormData, User } from "../types";
 
-export function useStockManagement(initialData?: Stock[]) {
-  const queryClient = useQueryClient();
-  const [isFormVisible, setIsFormVisible] = useState(false);
+type AffectedUser = {
+  user: User;
+  count: number;
+};
+
+type DeleteErrorResponse = {
+  error: string;
+  hasRelatedTransactions: boolean;
+  transactionCount: number;
+  affectedUsers: AffectedUser[];
+};
+
+export function useStockManagement() {
+  const [stocks, setStocks] = useState<Stock[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editingStock, setEditingStock] = useState<Stock | null>(null);
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [deleteModalData, setDeleteModalData] = useState({
+    isOpen: false,
+    stockId: "",
+    stockName: "",
+    transactionCount: 0,
+    affectedUsers: [] as AffectedUser[],
+  });
 
-  // Query for fetching stocks
-  const { 
-    data: stocks = [], 
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ["stocks"],
-    queryFn: async () => {
+  // Fetch all stocks
+  const fetchStocks = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
       const response = await fetch("/api/stocks");
+
       if (!response.ok) {
         throw new Error("Failed to fetch stocks");
       }
-      return response.json();
-    },
-    initialData
-  });
 
-  // Mutation for adding/updating stocks
-  const stockMutation = useMutation({
-    mutationFn: async (stock: Partial<Stock>) => {
-      const url = stock.id ? `/api/stocks/${stock.id}` : "/api/stocks";
-      const method = stock.id ? "PUT" : "POST";
+      const data = await response.json();
+      setStocks(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
+      toast.error("Failed to load stocks");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(stock),
-      });
+  // Initialize by fetching stocks
+  useEffect(() => {
+    fetchStocks();
+  }, []);
 
-      if (!response.ok) {
-        throw new Error(`Failed to ${stock.id ? "update" : "create"} stock`);
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      // Invalidate and refetch stocks
-      queryClient.invalidateQueries({ queryKey: ["stocks"] });
-      toast.success(`Stock ${editingStock ? "updated" : "created"} successfully`);
-      setEditingStock(null);
-      setIsFormVisible(false);
-    },
-    onError: (error) => {
-      toast.error(`Error: ${error.message}`);
-    },
-  });
-
-  // Mutation for deleting stocks
-  const deleteMutation = useMutation({
-    mutationFn: async (stockId: string) => {
-      const response = await fetch(`/api/stocks/${stockId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete stock");
-      }
-
-      return response.json();
-    },
-    onMutate: async (stockId) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["stocks"] });
-      
-      // Snapshot the previous value
-      const previousStocks = queryClient.getQueryData(["stocks"]);
-      
-      // Optimistically update the UI
-      queryClient.setQueryData(
-        ["stocks"], 
-        (old: Stock[] = []) => old.filter(stock => stock.id !== stockId)
-      );
-      
-      return { previousStocks };
-    },
-    onSuccess: () => {
-      toast.success("Stock deleted successfully");
-    },
-    onError: (error, _, context) => {
-      // If the mutation fails, roll back to the previous value
-      queryClient.setQueryData(["stocks"], context?.previousStocks);
-      toast.error(`Error: ${error.message}`);
-    },
-    onSettled: () => {
-      // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: ["stocks"] });
-    },
-  });
-
-  // Form handling
+  // Handle adding a new stock
   const handleAddStock = () => {
     setEditingStock(null);
     setIsFormVisible(true);
   };
 
+  // Handle editing a stock
   const handleEditStock = (stock: Stock) => {
     setEditingStock(stock);
     setIsFormVisible(true);
   };
 
-  const handleDeleteStock = (stockId: string) => {
-    if (window.confirm("Are you sure you want to delete this stock?")) {
-      deleteMutation.mutate(stockId);
+  // Handle form submission for creating or updating a stock
+  const handleFormSubmit = async (formData: StockFormData) => {
+    try {
+      setError(null);
+
+      if (editingStock) {
+        // Update existing stock
+        const response = await fetch(`/api/stocks/${editingStock.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update stock");
+        }
+
+        toast.success("Stock updated successfully");
+      } else {
+        // Create new stock
+        const response = await fetch("/api/stocks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create stock");
+        }
+
+        toast.success("Stock created successfully");
+      }
+
+      setIsFormVisible(false);
+      fetchStocks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
+      toast.error(err instanceof Error ? err.message : "Operation failed");
     }
   };
 
-  const handleFormSubmit = (stockData: Partial<Stock>) => {
-    // If editing, include the ID
-    if (editingStock) {
-      stockMutation.mutate({ ...stockData, id: editingStock.id });
-    } else {
-      stockMutation.mutate(stockData);
+  // Handle delete stock
+  const handleDeleteStock = async (stockId: string) => {
+    const stock = stocks.find((s) => s.id === stockId);
+    try {
+      setError(null);
+
+      const response = await fetch(`/api/stocks/${stock?.id}`, {
+        method: "DELETE",
+      });
+
+      // If there are related transactions, show the modal
+      if (response.status === 400) {
+        const data = (await response.json()) as DeleteErrorResponse;
+
+        if (data.hasRelatedTransactions && stock) {
+          setDeleteModalData({
+            isOpen: true,
+            stockId: stock.id,
+            stockName: stock.name,
+            transactionCount: data.transactionCount,
+            affectedUsers: data.affectedUsers,
+          });
+          return;
+        }
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete stock");
+      }
+
+      toast.success("Stock deleted successfully");
+      fetchStocks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to delete stock",
+      );
+    }
+  };
+
+  // Handle force delete stock (deletes stock and all related transactions)
+  const handleForceDelete = async () => {
+    try {
+      setError(null);
+
+      const response = await fetch(`/api/stocks/${deleteModalData.stockId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ forceDelete: true }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete stock");
+      }
+
+      toast.success("Stock and related transactions deleted successfully");
+      setDeleteModalData((prev) => ({ ...prev, isOpen: false }));
+      fetchStocks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to force delete stock",
+      );
     }
   };
 
   return {
     stocks,
-    isLoading: isLoading || stockMutation.isPending || deleteMutation.isPending,
+    isLoading,
     error,
     editingStock,
     isFormVisible,
-    refetch,
+    deleteModalData,
+    fetchStocks,
     handleAddStock,
     handleEditStock,
     handleDeleteStock,
+    handleForceDelete,
     handleFormSubmit,
     setIsFormVisible,
+    setDeleteModalData,
   };
 }
