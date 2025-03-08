@@ -1,4 +1,4 @@
-export const serializeData = (data: any): any => {
+export const serializeData = (data: unknown): unknown => {
   if (data === null || data === undefined) return data;
 
   if (typeof data === "object") {
@@ -7,7 +7,7 @@ export const serializeData = (data: any): any => {
     }
 
     // Handle Decimal objects (recognized by having a 's' property)
-    if ("s" in data && "d" in data) {
+    if (data !== null && "s" in data && "d" in data) {
       return String(data);
     }
 
@@ -15,9 +15,9 @@ export const serializeData = (data: any): any => {
       return data.map(serializeData);
     }
 
-    const result: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
     for (const key in data) {
-      result[key] = serializeData(data[key]);
+      result[key] = serializeData((data as Record<string, unknown>)[key]);
     }
     return result;
   }

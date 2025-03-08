@@ -24,10 +24,7 @@ export function StockTable({
   const queryClient = useQueryClient();
 
   // Fetch stocks with optimized settings
-  const {
-    data: stocks,
-    isLoading,
-  } = useQuery({
+  const { data: stocks, isLoading } = useQuery({
     queryKey: ["stocks"],
     queryFn: async () => {
       const response = await fetch(`/api/stocks`);
@@ -37,10 +34,9 @@ export function StockTable({
       return response.json();
     },
     initialData: initialStocks,
-    refetchInterval: 15000,  // 15 seconds instead of 30
-    staleTime: 5000,        // Consider data stale after 5 seconds
-    refetchOnMount: true,   // Refetch when component mounts
-    refetchOnWindowFocus: false, // Don't refetch on window focus
+    staleTime: 5000, 
+    refetchOnMount: true, 
+    refetchOnWindowFocus: false, 
   });
 
   // Handle delete mutation with cache invalidation
@@ -80,10 +76,13 @@ export function StockTable({
   // Enhanced delete handler that uses the mutation
   const handleDelete = async (stockId: string) => {
     try {
-      await deleteMutation.mutateAsync(stockId);
-      if (onDelete) onDelete(stockId);
+      // Just call onDelete directly - let the parent component handle it
+      if (onDelete) {
+        await onDelete(stockId);
+      }
     } catch (error) {
       console.error("Error deleting stock:", error);
+      // Don't show error toast here - the parent component will handle it
     }
   };
 

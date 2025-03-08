@@ -3,22 +3,26 @@ import { Stock } from "@/lib/types";
 import { StockTable } from "../stock/StockTable";
 import { StockDeleteDialogue } from "../stock/StockDeleteDialogue";
 
+type DeleteModalData = {
+  isOpen: boolean;
+  stockId: string;
+  stockName: string;
+  transactionCount: number;
+  affectedUsers: Array<{
+    user: { id: string; name: string | null; email: string | null };
+    count: number;
+  }>;
+};
+
 type AdminListSectionProps = {
   isLoading: boolean;
   stocks: Stock[];
   onEdit: (stock: Stock) => void;
   onDelete: (stockId: string) => Promise<void>;
-  deleteModalData: {
-    isOpen: boolean;
-    stockId: string;
-    stockName: string;
-    transactionCount: number;
-    affectedUsers: Array<{
-      user: { id: string; name: string | null; email: string | null };
-      count: number;
-    }>;
-  };
-  setDeleteModalData: (data: any) => void;
+  deleteModalData: DeleteModalData;
+  setDeleteModalData: (
+    data: DeleteModalData | ((prev: DeleteModalData) => DeleteModalData),
+  ) => void;
   onForceDelete: () => void;
 };
 

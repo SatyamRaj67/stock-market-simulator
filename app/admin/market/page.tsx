@@ -39,7 +39,7 @@ const AdminPage = () => {
         onEdit={handleEditStock}
         onDelete={handleDeleteStock}
         deleteModalData={deleteModalData}
-        setDeleteModalData={setDeleteModalData}
+        setDeleteModalData={(data) => setDeleteModalData(data as any)}
         onForceDelete={handleForceDelete}
       />
     </div>

@@ -9,13 +9,13 @@ import {
 } from "@/components/ui/card";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 
 import ClientPortfolioHeader from "@/components/portfolio/ClientPortfolioHeader";
 import PositionsTable from "@/components/portfolio/portfolioPositions/PositionsTable"; // Import the new table component
 import PortfolioTransactions from "@/components/portfolio/PortfolioTransactions";
 import PortfolioChart from "@/components/portfolio/PortfolioChart";
+import { authOptions } from "@/lib/auth/options";
 
 export default async function PortfolioPage() {
   const session = await getServerSession(authOptions);

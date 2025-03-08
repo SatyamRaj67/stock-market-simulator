@@ -1,6 +1,10 @@
-import { useState, useEffect } from "react";
+import { 
+  useState, 
+  useEffect 
+} from "react";
 import { toast } from "sonner";
 import { Stock, StockFormData, User } from "../types";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type AffectedUser = {
   user: User;
@@ -15,6 +19,8 @@ type DeleteErrorResponse = {
 };
 
 export function useStockManagement() {
+  const queryClient = useQueryClient();
+
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +33,28 @@ export function useStockManagement() {
     transactionCount: 0,
     affectedUsers: [] as AffectedUser[],
   });
+
+  const { error: fetchError } = useQuery({
+    queryKey: ["stocks"],
+    queryFn: async () => {
+      const response = await fetch("/api/stocks");
+      if (!response.ok) {
+        throw new Error("Failed to fetch stocks");
+      }
+      return response.json();
+    },
+    // More reasonable settings:
+    staleTime: 60000,      
+    refetchInterval: 60000, // Refetch every minute
+  });
+
+  // Set error state from fetch error when needed
+  useEffect(() => {
+    if (fetchError) {
+      setError(fetchError instanceof Error ? fetchError.message : "Unknown error occurred");
+      toast.error("Failed to load stocks");
+    }
+  }, [fetchError]);
 
   // Fetch all stocks
   const fetchStocks = async () => {
@@ -71,6 +99,7 @@ export function useStockManagement() {
   const handleFormSubmit = async (formData: StockFormData) => {
     try {
       setError(null);
+      queryClient.invalidateQueries({ queryKey: ["stocks"] });
 
       if (editingStock) {
         // Update existing stock
@@ -116,6 +145,8 @@ export function useStockManagement() {
 
       const response = await fetch(`/api/stocks/${stock?.id}`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ forceDelete: false }),
       });
 
       // If there are related transactions, show the modal

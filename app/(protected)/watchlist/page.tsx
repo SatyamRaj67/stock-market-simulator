@@ -3,11 +3,11 @@ import { WatchlistContent } from "@/components/watchlist/WatchlistContent";
 import { EmptyWatchlist } from "@/components/watchlist/WatchlistEmpty";
 import { WatchlistSkeleton } from "@/components/watchlist/WatchlistSkeleton";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { serializeData } from "@/lib/utils/serializeData";
 import { watchlistService } from "@/prisma/services/watchlistService";
+import { authOptions } from "@/lib/auth/options";
 
 
 

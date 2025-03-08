@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 import { checkAdminRole } from "@/lib/utils/roleCheck";
+import { authOptions } from "@/lib/auth/options";
 
 interface UserTransactionGroup {
   [userId: string]: {
@@ -17,12 +17,14 @@ interface UserTransactionGroup {
 
 // GET single stock by ID
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } },
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
+    const { id } = context.params;
+
     const stock = await prisma.stock.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!stock) {
@@ -41,8 +43,8 @@ export async function GET(
 
 // PUT update stock (admin only)
 export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } },
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   // Check admin authorization
   const session = await getServerSession(authOptions);
@@ -53,11 +55,12 @@ export async function PUT(
   }
 
   try {
-    const data = await req.json();
+    const { id } = context.params;
+    const data = await request.json();
 
     // Check if stock exists
     const exists = await prisma.stock.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!exists) {
@@ -66,7 +69,7 @@ export async function PUT(
 
     // Update the stock
     const stock = await prisma.stock.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         symbol: data.symbol,
         name: data.name,
@@ -96,8 +99,8 @@ export async function PUT(
 
 // DELETE stock (admin only)
 export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } },
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   // Check admin authorization
   const session = await getServerSession(authOptions);
@@ -108,15 +111,15 @@ export async function DELETE(
   }
 
   try {
-    const { id } = params;
-    const { forceDelete } = await req.json().catch(() => ({}));
+    const { id } = context.params;
+    const { forceDelete } = await request.json().catch(() => ({}));
 
     // Check if stock exists
-    const exists = await prisma.stock.findUnique({
+    const stock = await prisma.stock.findUnique({
       where: { id },
     });
 
-    if (!exists) {
+    if (!stock) {
       return NextResponse.json({ error: "Stock not found" }, { status: 404 });
     }
 

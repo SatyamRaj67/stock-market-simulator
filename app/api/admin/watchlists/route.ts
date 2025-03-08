@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { serializeData } from "@/lib/utils/serializeData";
 import { checkAdminRole } from "@/lib/utils/roleCheck";
+import { authOptions } from "@/lib/auth/options";
 
 // GET all watchlists
 export async function GET() {

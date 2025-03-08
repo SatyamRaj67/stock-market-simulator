@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 import { StockFormData } from "@/lib/types";
 import { checkAdminRole } from "@/lib/utils/roleCheck";
+import { authOptions } from "@/lib/auth/options";
 
 // GET all stocks (public read access)
 export async function GET() {
